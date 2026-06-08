@@ -90,30 +90,95 @@ export default function Home() {
           ? " ✅"
           : " ⏳"}
       </p>
-    {
-  result && (
-    <div className="mt-8">
+    {result && (
+  <div className="mt-8">
 
-      <h2 className="font-bold text-xl mb-4">
-        Contacts Found
-      </h2>
+    <h2 className="text-2xl font-bold mb-4">
+      Pipeline Results
+    </h2>
 
-      {result.contacts.map(
-              (contact: any, index: number) => (
-                <div
-                  key={index}
-                  className="border p-3 mb-2"
+    <div className="grid grid-cols-4 gap-4 mb-6">
+
+      <div className="border p-4 rounded">
+        <p>Companies</p>
+        <p className="text-2xl font-bold">
+          {result.summary.companiesFound}
+        </p>
+      </div>
+
+      <div className="border p-4 rounded">
+        <p>Contacts</p>
+        <p className="text-2xl font-bold">
+          {result.summary.contactsFound}
+        </p>
+      </div>
+
+      <div className="border p-4 rounded">
+        <p>Verified Emails</p>
+        <p className="text-2xl font-bold">
+          {result.summary.verifiedEmails}
+        </p>
+      </div>
+
+      <div className="border p-4 rounded">
+        <p>Revealed Emails</p>
+        <p className="text-2xl font-bold">
+          {result.summary.revealedEmails}
+        </p>
+      </div>
+
+    </div>
+
+    <table className="w-full border">
+
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Title</th>
+          <th>Email</th>
+          <th>LinkedIn</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {result.contacts.map(
+          (contact: any) => (
+            <tr key={contact.personId}>
+
+              <td>{contact.name}</td>
+
+              <td>{contact.title}</td>
+
+              <td>
+                {contact.email || "N/A"}
+              </td>
+
+              <td>
+                <a
+                  href={contact.linkedinUrl}
+                  target="_blank"
                 >
-                  <p>{contact.name}</p>
-                  <p>{contact.title}</p>
-                  <p>{contact.email}</p>
-                </div>
-              )
-            )}
+                  Profile
+                </a>
+              </td>
 
-          </div>
-        )
-      }
+            </tr>
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+    <button
+      className="mt-6 bg-black text-white px-4 py-2 rounded"
+    >
+      Confirm & Send Emails
+    </button>
+
+  </div>
+)}
     </div>
     </div>
   );
