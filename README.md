@@ -4,7 +4,7 @@ A fully automated B2B outreach pipeline built with **Next.js 15**, **Ocean.io**,
 
 ---
 
-## 🚀 How It Works
+##  How It Works
 
 ```text
 company.domain
@@ -151,7 +151,7 @@ Triggers or proceeds with the pipeline tracking stage.
 *   **Payload:** `{ domain: "targetcompany.com" }`
 *   **Behavior:** Sours lookalikes from Ocean.io and fetches contacts via Prospeo before hitting the pause checkpoint.
 
-### `POST /api/send-bulk`
+### `POST /api/send`
 Triggers actual outbound emails via Brevo for all approved targets inside the checkpoint.
 *   **Payload:** `{ contacts: [ { email: "...", firstName: "..." } ] }`
 
