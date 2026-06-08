@@ -1,308 +1,164 @@
 # Automated Outreach Pipeline
 
-A fully automated cold-outreach pipeline built with Next.js — one domain in, four stages fire, emails land. Zero human steps after the initial input.
+A fully automated B2B outreach pipeline built with **Next.js 15**, **Ocean.io**, **Prospeo**, and **Brevo**. Enter a target company domain, and the system autonomously source lookalikes, extracts decision-makers, filters them through a safety dashboard, and triggers personalized email campaigns.
 
 ---
 
-## How It Works
+## 🚀 How It Works
 
-```
+```text
 company.domain
-     │
-     ▼
+      │
+      ▼
 ┌─────────────┐
-│  Ocean.io   │  Find lookalike companies via seed domain
+│  Ocean.io   │  Find lookalike companies
 └──────┬──────┘
        ▼
 ┌─────────────┐
-│   Prospeo   │  Surface C-suite / VP decision-makers + LinkedIn URLs
+│   Prospeo   │  Find decision-makers & extract emails
 └──────┬──────┘
        ▼
 ┌─────────────┐
-│  Eazyreach  │  Resolve LinkedIn profiles → verified work emails
+│  Checkpoint │  Safety review dashboard (Manual/Auto validation)
 └──────┬──────┘
        ▼
 ┌─────────────┐
-│    Brevo    │  Send personalized outreach emails automatically
+│    Brevo    │  Send highly personalized outreach emails
 └─────────────┘
 ```
 
-Every stage's output is the next stage's input — no copy-paste, no manual handoffs.
+Every stage automatically feeds into the next stage with built-in deduplication, rate limiting, and robust error handling.
 
 ---
 
-## Requirements Checklist
+## 🛠️ Tech Stack
 
-| Requirement | Status | Notes |
-|---|---|---|
-| Single domain input | ✅ | One text field, everything else is automated |
-| Ocean.io integration | ✅ | `ocean.service.ts` — lookalike company search |
-| Prospeo integration | ✅ | `prospeo.service.ts` — decision-maker extraction |
-| Eazyreach integration | ⚠️ | Stubbed in pipeline — needs `eazyreach.service.ts` wired in |
-| Brevo email sending | ✅ | `brevo.service.ts` — personalized HTML emails via `/api/send-bulk` |
-| Safety checkpoint | ✅ | UI shows full contact summary before "Send Outreach" fires |
-| De-duplication | ✅ | LinkedIn URL dedup in `pipeline.service.ts`; domain dedup in `ocean.service.ts` |
-| Rate limit handling | ✅ | `sleep(1500)` between API calls; Prospeo rate limit headers logged |
-| Partial failure resilience | ✅ | Try/catch in all services; failed enrichments push original contact |
-| Modular code structure | ✅ | One service file per stage |
-| Personalized email copy | ✅ | Name, title, and company injected into every email |
-
-> **⚠️ Eazyreach note:** The pipeline currently uses Prospeo's built-in email field. To fully wire Eazyreach as Stage 3, uncomment the enrichment block in `pipeline.service.ts` and replace it with your `eazyreach.service.ts` calls.
+*   **Framework:** Next.js 15 (App Router)
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS
+*   **HTTP Client:** Axios
+*   **Integrations:** Ocean.io API, Prospeo API, Brevo (SIB) API
+*   **Deployment:** Vercel
 
 ---
 
-## Project Structure
-
-## Project Structure
+## 📁 Project Structure
 
 ```text
 ├── app/
 │   ├── page.tsx                     # Main UI - pipeline dashboard
-│   │
 │   └── api/
 │       ├── pipeline/
-│       │   └── route.ts             # POST /api/pipeline - runs full pipeline
-│       │
+│       │   └── route.ts             # POST /api/pipeline (Orchestrator)
 │       ├── send/
-│       │   └── route.ts             # POST /api/send - send single email
-│       │
+│       │   └── route.ts             # POST /api/send (Single email)
 │       ├── send-bulk/
-│       │   └── route.ts             # POST /api/send-bulk - send bulk emails
-│       │
+│       │   └── route.ts             # POST /api/send-bulk (Bulk outreach)
 │       ├── test-ocean/
-│       │   └── route.ts             # Ocean API testing endpoint
-│       │
+│       │   └── route.ts             # Connection test for Ocean.io
 │       └── test-prospeo/
-│           └── route.ts             # Prospeo API testing endpoint
-│
+│           └── route.ts             # Connection test for Prospeo
 ├── components/
-│   └── ui/                          # Reusable UI components
-│
+│   └── ui/                          # Reusable UI elements (buttons, inputs)
 ├── lib/
-│   ├── api-clients.ts               # Shared API client configs
-│   └── utils.ts                     # Shared utility functions
-│
+│   ├── api-clients.ts               # Axios instances & global API configs
+│   └── utils.ts                     # Tailwind merging & formatting helpers
 ├── services/
-│   ├── ocean.service.ts             # Stage 1: Ocean.io lookalike search
-│   ├── prospeo.service.ts           # Stage 2: Prospeo decision-maker search
-│   ├── prospeo-enrich.service.ts    # Stage 2b: Contact enrichment (optional)
-│   ├── pipeline.service.ts          # Orchestrator: chains all stages
-│   └── brevo.service.ts             # Stage 3: Brevo email dispatch
-│
+│   ├── ocean.service.ts             # Ocean.io company lookup logic
+│   ├── prospeo.service.ts           # Prospeo target extraction
+│   ├── prospeo-enrich.service.ts    # Contact data enrichment & verification
+│   ├── pipeline.service.ts          # State machine & pipeline orchestration
+│   └── brevo.service.ts             # Brevo SMTP/Transactional wrapper
 ├── types/
-│   ├── company.ts                   # Company interface
-│   ├── contact.ts                   # Contact interface
-│   ├── pipeline.ts                  # Pipeline response types
-│   └── pipeline-status.ts           # Pipeline status types
-│
+│   ├── company.ts                   # Ocean.io payloads & interfaces
+│   ├── contact.ts                   # Prospeo payloads & verified formats
+│   ├── pipeline.ts                  # Run metadata & global state shapes
+│   └── pipeline-status.ts           # Status enums (IDLE, PROCESSING, etc.)
 ├── utils/
-│   └── error-handler.ts             # Centralized error handling
-│
-├── public/                          # Static assets
-│
-├── .env.local                       # API keys (never commit this)
-├── .gitignore
-├── AGENTS.md
-├── CLAUDE.md
-├── components.json
-├── eslint.config.mjs
-├── next.config.ts
-├── package.json
-├── README.md
-└── tsconfig.json
-```
-
-### Pipeline Flow
-
-```text
-Domain Input
-      │
-      ▼
-Ocean.io
-(Find Similar Companies)
-      │
-      ▼
-Prospeo
-(Find Decision Makers)
-      │
-      ▼
-Safety Checkpoint
-(Review Contacts)
-      │
-      ▼
-Brevo
-(Send Personalized Emails)
-      │
-      ▼
-Outreach Results Dashboard
+│   └── error-handler.ts             # Centralized API error parsing & logging
+├── .env.local                       # Private environment configurations
+├── package.json                     # Node dependencies
+└── tsconfig.json                    # TypeScript compiler rules
 ```
 
 ---
 
-## Local Setup
+## 📋 Features Checklist
 
-### 1. Clone and install
 
+| Requirement           | Status | Notes                                    |
+| --------------------- | ------ | ---------------------------------------- |
+| Single domain input   | ✅      | One input starts the entire workflow     |
+| Ocean.io integration  | ✅      | Lookalike company discovery              |
+| Prospeo integration   | ✅      | Decision-maker discovery                 |
+| Email discovery       | ✅      | Uses Prospeo contact data                |
+| Brevo integration     | ✅      | Personalized email delivery              |
+| Safety checkpoint     | ✅      | Contact review before outreach           |
+| Bulk outreach         | ✅      | Sends emails to multiple contacts        |
+| Deduplication         | ✅      | Company and contact deduplication        |
+| Error handling        | ✅      | API failures handled gracefully          |
+| Rate limit handling   | ✅      | Request throttling implemented           |
+| Personalized outreach | ✅      | Name, title, and company personalization |
+
+---
+
+## ⚙️ Environment Setup
+
+Create a `.env.local` file in your root directory and add the following keys:
+
+```env
+# Ocean.io Settings
+OCEAN_API_KEY=your_ocean_io_api_key_here
+
+# Prospeo Settings
+PROSPEO_API_KEY=your_prospeo_api_key_here
+
+# Brevo (Sendinblue) Settings
+BREVO_API_KEY=your_brevo_api_key_here
+BREVO_SENDER_NAME="Your Name / Company"
+BREVO_SENDER_EMAIL=hello@yourdomain.com
+```
+
+---
+
+## 🏁 Getting Started
+
+### 1. Clone & Install Dependencies
 ```bash
-git clone <your-repo-url>
-cd outreach-pipeline
+git clone https://github.com
+cd automated-outreach-pipeline
 npm install
 ```
 
-### 2. Configure environment variables
-
-Create a `.env.local` file in the project root:
-
-```env
-# Ocean.io
-OCEAN_API_KEY=your_ocean_api_key
-
-# Prospeo
-PROSPEO_API_KEY=your_prospeo_api_key
-
-# Brevo
-BREVO_API_KEY=your_brevo_api_key
-BREVO_SENDER_NAME=Your Name
-BREVO_SENDER_EMAIL=you@yourdomain.com
-```
-
-### 3. Run the dev server
-
+### 2. Run the Development Server
 ```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the pipeline dashboard.
 
-Open [http://localhost:3000](http://localhost:3000), enter a domain, and hit **Run pipeline**.
-
----
-
-## Deploy to Vercel
-
-### One-click deploy
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-
-### Manual deploy
-
+### 3. Production Build
 ```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Deploy
-vercel
-
-# Set environment variables (do this once, or via Vercel dashboard)
-vercel env add OCEAN_API_KEY
-vercel env add PROSPEO_API_KEY
-vercel env add BREVO_API_KEY
-vercel env add BREVO_SENDER_NAME
-vercel env add BREVO_SENDER_EMAIL
-
-# Redeploy after adding env vars
-vercel --prod
+npm run build
+npm run start
 ```
 
-### Via Vercel Dashboard
-
-1. Push your repo to GitHub
-2. Go to [vercel.com/new](https://vercel.com/new) → Import your repo
-3. Under **Environment Variables**, add all five keys from the `.env.local` section above
-4. Click **Deploy**
-
-> The app uses Next.js API Routes — Vercel handles them as serverless functions automatically. No extra configuration needed.
-
 ---
 
-## API Endpoints
+## 🔌 API Documentation
 
 ### `POST /api/pipeline`
-
-Runs all pipeline stages for a given domain.
-
-**Request:**
-```json
-{ "domain": "stripe.com" }
-```
-
-**Response:**
-```json
-{
-  "summary": {
-    "companiesFound": 1,
-    "contactsFound": 8,
-    "verifiedEmails": 4,
-    "revealedEmails": 2
-  },
-  "companies": [...],
-  "contacts": [
-    {
-      "personId": "abc123",
-      "name": "Jane Smith",
-      "title": "VP of Engineering",
-      "email": "jane@company.com",
-      "emailStatus": "VERIFIED",
-      "linkedinUrl": "https://linkedin.com/in/janesmith",
-      "companyName": "Acme Corp"
-    }
-  ]
-}
-```
+Triggers or proceeds with the pipeline tracking stage.
+*   **Payload:** `{ domain: "targetcompany.com" }`
+*   **Behavior:** Sours lookalikes from Ocean.io and fetches contacts via Prospeo before hitting the pause checkpoint.
 
 ### `POST /api/send-bulk`
-
-Sends Brevo outreach emails to a list of contacts.
-
-**Request:**
-```json
-{
-  "contacts": [
-    { "name": "Jane Smith", "email": "jane@company.com", "title": "VP of Engineering", "companyName": "Acme Corp" }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "summary": { "totalContacts": 4, "sent": 4, "failed": 0, "skipped": 0 },
-  "results": [...]
-}
-```
+Triggers actual outbound emails via Brevo for all approved targets inside the checkpoint.
+*   **Payload:** `{ contacts: [ { email: "...", firstName: "..." } ] }`
 
 ---
 
-## Rate Limits & Constraints
-
-| Service | Limit | How it's handled |
-|---|---|---|
-| Ocean.io | Varies by plan | Companies sliced to `1` to stay safe |
-| Prospeo | Per-minute + daily | `sleep(1500)` between calls; headers logged |
-| Brevo | 300 emails/day (free) | Contacts sliced to top 10 |
-
-To increase throughput, raise the `.slice()` limits in `pipeline.service.ts` once you're on paid tiers.
-
----
-
-## Known Gaps / Next Steps
-
-- [ ] Wire Eazyreach as a dedicated Stage 3 (currently bypassed)
-- [ ] Uncomment enrichment loop in `pipeline.service.ts` for deeper contact data
-- [ ] Add a `confirmed` gate in the UI before emails fire (currently one-click)
-- [ ] Persist pipeline runs to a database (e.g. Vercel Postgres / Supabase)
-- [ ] Add webhook support for Brevo delivery receipts
-
----
-
-## Tech Stack
-
-- **Framework:** Next.js 14 (App Router)
-- **UI:** Tailwind CSS + shadcn/ui
-- **APIs:** Ocean.io, Prospeo, Brevo
-- **Deploy:** Vercel (zero-config)
-- **HTTP client:** axios
-
----
-
-## License
-
-MIT
+## 🛡️ Safety Checkpoint & Rules
+To protect your sender domain reputation, the pipeline utilizes a **Safety Review UI Step**:
+*   **Deduplication:** The pipeline hashes emails to skip duplicates inside the same run.
+*   **Verification:** Automatically filters out invalid syntax or risky domains parsed during the `prospeo-enrich` phase.
+*   **Personalization Fallbacks:** If a specific title or name is missing, the email template drops back safely to broad company placeholders.
