@@ -86,6 +86,7 @@ console.log("================================");
 
     mobile: item.person.mobile?.mobile,
 
+    companyName: item.company.name,
     companyDomain: item.company.domain
   }));
 

@@ -79,7 +79,15 @@ export async function runPipeline(
   //     enrichedContacts.push(contact);
   //   }
   // }
-
+    contacts = contacts.filter(
+      (contact, index, self) =>
+        index ===
+        self.findIndex(
+          c =>
+            c.linkedinUrl ===
+            contact.linkedinUrl
+        )
+    );
   return {
   summary: {
     companiesFound: companies.length,

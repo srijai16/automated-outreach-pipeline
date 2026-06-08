@@ -1,7 +1,38 @@
 import axios from "axios";
 
 const OCEAN_BASE_URL = "https://api.ocean.io";
-function mapOceanCompanies(data: any) {
+
+interface OceanCompany {
+  name: string;
+  domain: string;
+  linkedinIndustry: string;
+  companySize: string;
+  primaryCountry: string;
+  employeeCountOcean: number;
+  revenue: string;
+  description: string;
+}
+
+interface OceanCompanyItem {
+  company: OceanCompany;
+}
+
+interface OceanSearchResponse {
+  companies: OceanCompanyItem[];
+}
+
+export interface SimilarCompany {
+  name: string;
+  domain: string;
+  industry: string;
+  size: string;
+  country: string;
+  employees: number;
+  revenue: string;
+  description: string;
+}
+
+function mapOceanCompanies(data: OceanSearchResponse) {
   return data.companies.map((item: any) => ({
     name: item.company.name,
     domain: item.company.domain,
@@ -13,39 +44,77 @@ function mapOceanCompanies(data: any) {
     description: item.company.description,
   }));
 }
+
 export async function findSimilarCompanies(
   domain: string
 ) {
   try {
+
+    console.log(
+      "Searching similar companies for:",
+      domain
+    );
+
     const response = await axios.post(
-    `${OCEAN_BASE_URL}/v3/search/companies`,
-    {
-      companiesFilters: {
-        industries: {
-          industries: ["SaaS"]
-        },
-        technologies: {
-          apps: {
-            anyOf: ["HubSpot"]
-          }
-        },
-        companySizes: ["51-200"]
+      `${OCEAN_BASE_URL}/v3/search/companies`,
+      {
+        size: 10,
+
+        companiesFilters: {
+          lookalikeDomains: [domain]
+        }
       },
-      size: 10
-    },
-    {
-      headers: {
-        "X-Api-Token": process.env.OCEAN_API_KEY,
-        "Content-Type": "application/json"
+      {
+        headers: {
+          "X-Api-Token":
+            process.env.OCEAN_API_KEY,
+          "Content-Type":
+            "application/json"
+        }
       }
-    }
-  );
-  return mapOceanCompanies(response.data);
+    );
+
+    let companies =
+      mapOceanCompanies(response.data);
+
+    // Remove duplicates
+    companies = companies.filter(
+      (company, index, self) =>
+        index ===
+        self.findIndex(
+          (c:any) => c.domain === company.domain
+        )
+    );
+
+    // Remove seed company variants
+    const seedKeyword =
+      domain.split(".")[0].toLowerCase();
+
+    companies = companies.filter(
+      company =>
+        company.domain &&
+        !company.domain
+          .toLowerCase()
+          .includes(seedKeyword)
+    );
+
+    console.log(
+      `Found ${companies.length} companies`
+    );
+
+    return companies;
+
   } catch (error: any) {
-      console.error(
-        "Ocean API Error:",
-        JSON.stringify(error.response?.data, null, 2)
-      );
-      throw error;
-    }
+
+    console.error(
+      "Ocean API Error:",
+      JSON.stringify(
+        error.response?.data,
+        null,
+        2
+      )
+    );
+
+    throw error;
+  }
 }

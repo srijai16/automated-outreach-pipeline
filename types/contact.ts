@@ -7,11 +7,13 @@ export interface Contact {
   title: string;
 
   linkedinUrl: string;
-  companyDomain: string;
 
   email?: string;
   emailStatus?: string;
   emailRevealed?: boolean;
 
   mobile?: string;
+
+  companyName?: string;
+  companyDomain: string;
 }
