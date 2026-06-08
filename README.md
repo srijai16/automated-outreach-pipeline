@@ -53,22 +53,88 @@ Every stage's output is the next stage's input — no copy-paste, no manual hand
 
 ## Project Structure
 
-```
+## Project Structure
+
+```text
 ├── app/
-│   ├── page.tsx                  # Main UI — pipeline dashboard
+│   ├── page.tsx                     # Main UI - pipeline dashboard
+│   │
 │   └── api/
-│       ├── pipeline/route.ts     # POST /api/pipeline — runs all stages
-│       └── send-bulk/route.ts    # POST /api/send-bulk — fires Brevo emails
+│       ├── pipeline/
+│       │   └── route.ts             # POST /api/pipeline - runs full pipeline
+│       │
+│       ├── send/
+│       │   └── route.ts             # POST /api/send - send single email
+│       │
+│       ├── send-bulk/
+│       │   └── route.ts             # POST /api/send-bulk - send bulk emails
+│       │
+│       ├── test-ocean/
+│       │   └── route.ts             # Ocean API testing endpoint
+│       │
+│       └── test-prospeo/
+│           └── route.ts             # Prospeo API testing endpoint
+│
+├── components/
+│   └── ui/                          # Reusable UI components
+│
+├── lib/
+│   ├── api-clients.ts               # Shared API client configs
+│   └── utils.ts                     # Shared utility functions
+│
 ├── services/
-│   ├── ocean.service.ts          # Stage 1: Ocean.io lookalike search
-│   ├── prospeo.service.ts        # Stage 2: Prospeo decision-maker search
-│   ├── prospeo-enrich.service.ts # Stage 2b: Prospeo person enrichment (optional)
-│   ├── pipeline.service.ts       # Orchestrator: chains all stages
-│   └── brevo.service.ts          # Stage 4: Brevo email dispatch
+│   ├── ocean.service.ts             # Stage 1: Ocean.io lookalike search
+│   ├── prospeo.service.ts           # Stage 2: Prospeo decision-maker search
+│   ├── prospeo-enrich.service.ts    # Stage 2b: Contact enrichment (optional)
+│   ├── pipeline.service.ts          # Orchestrator: chains all stages
+│   └── brevo.service.ts             # Stage 3: Brevo email dispatch
+│
 ├── types/
-│   ├── contact.ts
-│   └── company.ts
-└── .env.local                    # API keys (never commit this)
+│   ├── company.ts                   # Company interface
+│   ├── contact.ts                   # Contact interface
+│   ├── pipeline.ts                  # Pipeline response types
+│   └── pipeline-status.ts           # Pipeline status types
+│
+├── utils/
+│   └── error-handler.ts             # Centralized error handling
+│
+├── public/                          # Static assets
+│
+├── .env.local                       # API keys (never commit this)
+├── .gitignore
+├── AGENTS.md
+├── CLAUDE.md
+├── components.json
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── README.md
+└── tsconfig.json
+```
+
+### Pipeline Flow
+
+```text
+Domain Input
+      │
+      ▼
+Ocean.io
+(Find Similar Companies)
+      │
+      ▼
+Prospeo
+(Find Decision Makers)
+      │
+      ▼
+Safety Checkpoint
+(Review Contacts)
+      │
+      ▼
+Brevo
+(Send Personalized Emails)
+      │
+      ▼
+Outreach Results Dashboard
 ```
 
 ---
